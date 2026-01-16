@@ -133,24 +133,41 @@
             font-weight: bold;
         }
         
+        /* ========== SECCIÓN EMPRESA - CORREGIDA ========== */
         .company-section {
-            font-size: 10px;
             text-align: center;
             border-top: 1px solid #000;
-            padding-top: 5px;
-            margin-top: 5px;
-            line-height: 1.3;
+            padding-top: 6px;
+            margin-top: 6px;
+            line-height: 1.2;
+        }
+        
+        .company-section .distributed-text {
+            font-size: 9px;
+            margin-bottom: 1px;
         }
         
         .company-section .company-name {
             font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 1px;
+        }
+        
+        .company-section .company-address {
+            font-size: 9px;
+            margin-bottom: 0;
+        }
+        
+        .company-section .company-phone {
+            font-size: 9px;
         }
         
         .expiration {
             font-weight: bold;
-            font-size: 14px;
-            margin-top: 5px;
+            font-size: 15px;
+            margin-top: 6px;
             text-align: center;
+            letter-spacing: 0.3px;
         }
         
         /* ========== UI STYLES ========== */
@@ -453,10 +470,10 @@
                                 </div>
                                 
                                 <div class="company-section">
-                                    <div id="previewDistributedBy">Distributed by/Distribuido por:</div>
+                                    <div class="distributed-text" id="previewDistributedBy">Distributed by/Distribuido por:</div>
                                     <div class="company-name" id="previewCompanyName">Hispanic Foods Corp</div>
-                                    <div id="previewCompanyAddress">194 E Jefferson Blvd, Los Angeles, CA. 90011</div>
-                                    <div>Tel: <span id="previewCompanyPhone">(213) 389-7506</span></div>
+                                    <div class="company-address" id="previewCompanyAddress">194 E Jefferson Blvd, Los Angeles, CA. 90011</div>
+                                    <div class="company-phone">Tel: <span id="previewCompanyPhone">(213) 389-7506</span></div>
                                 </div>
                                 
                                 <div class="expiration">
