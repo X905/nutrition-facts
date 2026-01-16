@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Etiquetas Nutricionales</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --label-border: 2px solid #000;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .preview-section {
+            position: sticky;
+            top: 2rem;
+        }
+        
+        /* Nutrition Label Styles */
+        .nutrition-label {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: white;
+            border: 2px solid #000;
+            padding: 8px;
+            width: 280px;
+            margin: 0 auto;
+        }
+        
+        .label-header {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .nutrition-title {
+            font-size: 28px;
+            font-weight: 900;
+            text-align: center;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+        
+        .serving-info {
+            font-size: 11px;
+            border-bottom: 8px solid #000;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .calories-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 4px solid #000;
+            padding-bottom: 3px;
+            margin-bottom: 3px;
+        }
+        
+        .calories-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .calories-value {
+            font-size: 14px;
+        }
+        
+        .daily-value-header {
+            text-align: right;
+            font-size: 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+        }
+        
+        .nutrient-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            border-bottom: 1px solid #000;
+            padding: 2px 0;
+        }
+        
+        .nutrient-row.thick-bottom {
+            border-bottom: 8px solid #000;
+        }
+        
+        .nutrient-row.medium-bottom {
+            border-bottom: 4px solid #000;
+        }
+        
+        .nutrient-row .indent {
+            padding-left: 15px;
+        }
+        
+        .nutrient-row .indent-2 {
+            padding-left: 30px;
+        }
+        
+        .nutrient-name {
+            font-weight: bold;
+        }
+        
+        .nutrient-name.normal {
+            font-weight: normal;
+        }
+        
+        .ingredients-section {
+            font-size: 9px;
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+            line-height: 1.3;
+        }
+        
+        .ingredients-section strong {
+            font-weight: bold;
+        }
+        
+        .company-section {
+            font-size: 9px;
+            text-align: center;
+            border-top: 1px solid #000;
+            padding-top: 8px;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .company-section .company-name {
+            font-weight: bold;
+        }
+        
+        .expiration {
+            font-weight: bold;
+            font-size: 11px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        
+        .btn-action {
+            transition: all 0.3s ease;
+        }
+        
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .input-group-text {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .toast-container {
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-12 text-center mb-4">
+                <h1 class="text-white fw-bold">
+                    <i class="bi bi-clipboard2-pulse me-2"></i>
+                    Generador de Etiquetas Nutricionales
+                </h1>
+                <p class="text-white-50">Crea etiquetas de información nutricional profesionales</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Formulario -->
+            <div class="col-lg-7">
+                <div class="form-section">
+                    <form id="nutritionForm">
+                        <!-- Información General -->
+                        <h5 class="section-title"><i class="bi bi-info-circle me-2"></i>Información General</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">Peso Neto</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="netWeight" value="3 onz (85g)" placeholder="Ej: 3 onz (85g)">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tamaño de Porción</label>
+                                <input type="text" class="form-control" id="servingSize" value="1/3 cup (28g)" placeholder="Ej: 1/3 cup (28g)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Porciones por Envase</label>
+                                <input type="number" class="form-control" id="servingsPerContainer" value="4" min="1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Calorías</label>
+                                <input type="number" class="form-control" id="calories" value="120" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Grasas -->
+                        <h5 class="section-title"><i class="bi bi-droplet me-2"></i>Grasas</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Grasa Total (g)</label>
+                                <input type="number" class="form-control" id="totalFat" value="4" min="0" step="0.1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grasa Total (%)</label>
+                                <input type="number" class="form-control" id="totalFatPercent" value="5" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grasa Saturada (g)</label>
+                                <input type="number" class="form-control" id="saturatedFat" value="1.5" min="0" step="0.1">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grasa Saturada (%)</label>
+                                <input type="number" class="form-control" id="saturatedFatPercent" value="8" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Grasa Trans (g)</label>
+                                <input type="number" class="form-control" id="transFat" value="0" min="0" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <!-- Colesterol y Sodio -->
+                        <h5 class="section-title"><i class="bi bi-heart-pulse me-2"></i>Colesterol y Sodio</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Colesterol (mg)</label>
+                                <input type="number" class="form-control" id="cholesterol" value="0" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Colesterol (%)</label>
+                                <input type="number" class="form-control" id="cholesterolPercent" value="0" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Sodio (mg)</label>
+                                <input type="number" class="form-control" id="sodium" value="120" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Sodio (%)</label>
+                                <input type="number" class="form-control" id="sodiumPercent" value="5" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Carbohidratos -->
+                        <h5 class="section-title"><i class="bi bi-diagram-3 me-2"></i>Carbohidratos</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Carbohidratos Totales (g)</label>
+                                <input type="number" class="form-control" id="totalCarbs" value="21" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Carbohidratos (%)</label>
+                                <input type="number" class="form-control" id="totalCarbsPercent" value="8" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fibra Dietética (g)</label>
+                                <input type="number" class="form-control" id="dietaryFiber" value="0" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Fibra (%)</label>
+                                <input type="number" class="form-control" id="dietaryFiberPercent" value="0" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Azúcares Totales (g)</label>
+                                <input type="number" class="form-control" id="totalSugars" value="0" min="0">
+                            </div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4"></div>
+                            <div class="col-md-4">
+                                <label class="form-label">Azúcares Añadidos (g)</label>
+                                <input type="number" class="form-control" id="addedSugars" value="0" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Azúcares Añadidos (%)</label>
+                                <input type="number" class="form-control" id="addedSugarsPercent" value="0" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Proteína -->
+                        <h5 class="section-title"><i class="bi bi-egg me-2"></i>Proteína</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">Proteína (g)</label>
+                                <input type="number" class="form-control" id="protein" value="2" min="0">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Proteína (%)</label>
+                                <input type="number" class="form-control" id="proteinPercent" value="4" min="0">
+                            </div>
+                        </div>
+                        
+                        <!-- Ingredientes -->
+                        <h5 class="section-title"><i class="bi bi-list-check me-2"></i>Ingredientes</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Ingredientes (Inglés)</label>
+                                <textarea class="form-control" id="ingredientsEn" rows="2" placeholder="Platain, Vegetable Oil, and Salt.">Platain, Vegetable Oil, and Salt.</textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Ingredientes (Español)</label>
+                                <textarea class="form-control" id="ingredientsEs" rows="2" placeholder="Plátano, Aceite Vegetal y Sal.">Plátano, Aceite Vegetal y Sal.</textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Información de la Empresa -->
+                        <h5 class="section-title"><i class="bi bi-building me-2"></i>Información de la Empresa</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Texto de Distribución</label>
+                                <input type="text" class="form-control" id="distributedBy" value="Distributed by/Distribuido por:">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre de la Empresa</label>
+                                <input type="text" class="form-control" id="companyName" value="Hispanic Foods Corp">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Dirección</label>
+                                <input type="text" class="form-control" id="companyAddress" value="194 E Jefferson Blvd, Los Angeles, CA. 90011">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input type="text" class="form-control" id="companyPhone" value="(213) 389-7506">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de Expiración</label>
+                                <input type="text" class="form-control" id="expirationDate" value="05/14/2026" placeholder="MM/DD/YYYY">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-primary btn-lg btn-action" onclick="updatePreview()">
+                                <i class="bi bi-eye me-2"></i>Actualizar Vista Previa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Vista Previa -->
+            <div class="col-lg-5">
+                <div class="preview-section">
+                    <div class="form-section">
+                        <h5 class="section-title"><i class="bi bi-image me-2"></i>Vista Previa</h5>
+                        
+                        <div id="labelContainer" class="mb-4">
+                            <div class="nutrition-label" id="nutritionLabel">
+                                <div class="label-header">
+                                    Net. Wt. <span id="previewNetWeight">3 onz (85g)</span>
+                                </div>
+                                
+                                <div class="nutrition-title">NUTRITION FACTS</div>
+                                
+                                <div class="serving-info">
+                                    <div>Servings Size: <span id="previewServingSize">1/3 cup (28g)</span></div>
+                                    <div>Servings Per Container <span id="previewServingsPerContainer">4</span></div>
+                                </div>
+                                
+                                <div class="calories-row">
+                                    <span class="calories-label">Calories <span id="previewCalories">120</span></span>
+                                    <span class="calories-value">% Daily Value*</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span><span class="nutrient-name">Total Fat</span> <span id="previewTotalFat">4</span>g</span>
+                                    <span><span id="previewTotalFatPercent">5</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span class="indent">Saturated Fat <span id="previewSaturatedFat">1.5</span>g</span>
+                                    <span><span id="previewSaturatedFatPercent">8</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span class="indent"><em>Trans</em> Fat <span id="previewTransFat">0</span>g</span>
+                                    <span></span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span><span class="nutrient-name">Cholesterol</span> <span id="previewCholesterol">0</span>mg</span>
+                                    <span><span id="previewCholesterolPercent">0</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span><span class="nutrient-name">Sodium</span> <span id="previewSodium">120</span>mg</span>
+                                    <span><span id="previewSodiumPercent">5</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span><span class="nutrient-name">Total Carbohydrate</span> <span id="previewTotalCarbs">21</span>g</span>
+                                    <span><span id="previewTotalCarbsPercent">8</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span class="indent">Dietary Fiber <span id="previewDietaryFiber">0</span>g</span>
+                                    <span><span id="previewDietaryFiberPercent">0</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span class="indent">Total Sugars <span id="previewTotalSugars">0</span>g</span>
+                                    <span></span>
+                                </div>
+                                
+                                <div class="nutrient-row">
+                                    <span class="indent-2">Includes <span id="previewAddedSugars">0</span>g Added Sugars</span>
+                                    <span><span id="previewAddedSugarsPercent">0</span>%</span>
+                                </div>
+                                
+                                <div class="nutrient-row thick-bottom">
+                                    <span><span class="nutrient-name">Protein</span> <span id="previewProtein">2</span>g</span>
+                                    <span><span id="previewProteinPercent">4</span>%</span>
+                                </div>
+                                
+                                <div class="ingredients-section">
+                                    <div><strong>Ingredients:</strong> <span id="previewIngredientsEn">Platain, Vegetable Oil, and Salt.</span></div>
+                                    <div><strong>Ingredientes:</strong> <span id="previewIngredientsEs">Plátano, Aceite Vegetal y Sal.</span></div>
+                                </div>
+                                
+                                <div class="company-section">
+                                    <div id="previewDistributedBy">Distributed by/Distribuido por:</div>
+                                    <div class="company-name" id="previewCompanyName">Hispanic Foods Corp</div>
+                                    <div id="previewCompanyAddress">194 E Jefferson Blvd, Los Angeles, CA. 90011</div>
+                                    <div>Tel: <span id="previewCompanyPhone">(213) 389-7506</span></div>
+                                </div>
+                                
+                                <div class="expiration">
+                                    Exp: <span id="previewExpirationDate">05/14/2026</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success btn-lg btn-action" onclick="downloadImage()">
+                                <i class="bi bi-download me-2"></i>Descargar Imagen
+                            </button>
+                            <button class="btn btn-info btn-lg btn-action text-white" onclick="copyToClipboard()">
+                                <i class="bi bi-clipboard me-2"></i>Copiar al Portapapeles
+                            </button>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <label class="form-label">Escala de imagen</label>
+                            <select class="form-select" id="imageScale">
+                                <option value="1">1x (Normal)</option>
+                                <option value="2" selected>2x (Alta resolución)</option>
+                                <option value="3">3x (Muy alta resolución)</option>
+                                <option value="4">4x (Ultra alta resolución)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <p class="text-white-50 mb-0">
+                    <i class="bi bi-code-slash me-1"></i>
+                    Generador de Etiquetas Nutricionales - Creado con Bootstrap 5
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-check-circle me-2"></i>
+                    <span id="toastMessage">Operación completada</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para actualizar la vista previa
+        function updatePreview() {
+            // Información General
+            document.getElementById('previewNetWeight').textContent = document.getElementById('netWeight').value;
+            document.getElementById('previewServingSize').textContent = document.getElementById('servingSize').value;
+            document.getElementById('previewServingsPerContainer').textContent = document.getElementById('servingsPerContainer').value;
+            document.getElementById('previewCalories').textContent = document.getElementById('calories').value;
+            
+            // Grasas
+            document.getElementById('previewTotalFat').textContent = document.getElementById('totalFat').value;
+            document.getElementById('previewTotalFatPercent').textContent = document.getElementById('totalFatPercent').value;
+            document.getElementById('previewSaturatedFat').textContent = document.getElementById('saturatedFat').value;
+            document.getElementById('previewSaturatedFatPercent').textContent = document.getElementById('saturatedFatPercent').value;
+            document.getElementById('previewTransFat').textContent = document.getElementById('transFat').value;
+            
+            // Colesterol y Sodio
+            document.getElementById('previewCholesterol').textContent = document.getElementById('cholesterol').value;
+            document.getElementById('previewCholesterolPercent').textContent = document.getElementById('cholesterolPercent').value;
+            document.getElementById('previewSodium').textContent = document.getElementById('sodium').value;
+            document.getElementById('previewSodiumPercent').textContent = document.getElementById('sodiumPercent').value;
+            
+            // Carbohidratos
+            document.getElementById('previewTotalCarbs').textContent = document.getElementById('totalCarbs').value;
+            document.getElementById('previewTotalCarbsPercent').textContent = document.getElementById('totalCarbsPercent').value;
+            document.getElementById('previewDietaryFiber').textContent = document.getElementById('dietaryFiber').value;
+            document.getElementById('previewDietaryFiberPercent').textContent = document.getElementById('dietaryFiberPercent').value;
+            document.getElementById('previewTotalSugars').textContent = document.getElementById('totalSugars').value;
+            document.getElementById('previewAddedSugars').textContent = document.getElementById('addedSugars').value;
+            document.getElementById('previewAddedSugarsPercent').textContent = document.getElementById('addedSugarsPercent').value;
+            
+            // Proteína
+            document.getElementById('previewProtein').textContent = document.getElementById('protein').value;
+            document.getElementById('previewProteinPercent').textContent = document.getElementById('proteinPercent').value;
+            
+            // Ingredientes
+            document.getElementById('previewIngredientsEn').textContent = document.getElementById('ingredientsEn').value;
+            document.getElementById('previewIngredientsEs').textContent = document.getElementById('ingredientsEs').value;
+            
+            // Información de la Empresa
+            document.getElementById('previewDistributedBy').textContent = document.getElementById('distributedBy').value;
+            document.getElementById('previewCompanyName').textContent = document.getElementById('companyName').value;
+            document.getElementById('previewCompanyAddress').textContent = document.getElementById('companyAddress').value;
+            document.getElementById('previewCompanyPhone').textContent = document.getElementById('companyPhone').value;
+            document.getElementById('previewExpirationDate').textContent = document.getElementById('expirationDate').value;
+            
+            showToast('Vista previa actualizada correctamente');
+        }
+        
+        // Función para descargar la imagen
+        async function downloadImage() {
+            const label = document.getElementById('nutritionLabel');
+            const scale = parseInt(document.getElementById('imageScale').value);
+            
+            try {
+                const canvas = await html2canvas(label, {
+                    scale: scale,
+                    backgroundColor: '#ffffff',
+                    useCORS: true
+                });
+                
+                const link = document.createElement('a');
+                link.download = 'nutrition-facts-label.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                showToast('Imagen descargada correctamente');
+            } catch (error) {
+                console.error('Error al generar imagen:', error);
+                showToast('Error al generar la imagen', 'danger');
+            }
+        }
+        
+        // Función para copiar al portapapeles
+        async function copyToClipboard() {
+            const label = document.getElementById('nutritionLabel');
+            const scale = parseInt(document.getElementById('imageScale').value);
+            
+            try {
+                const canvas = await html2canvas(label, {
+                    scale: scale,
+                    backgroundColor: '#ffffff',
+                    useCORS: true
+                });
+                
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({
+                                'image/png': blob
+                            })
+                        ]);
+                        showToast('Imagen copiada al portapapeles');
+                    } catch (err) {
+                        // Fallback: descargar la imagen si no se puede copiar
+                        console.error('Error al copiar:', err);
+                        showToast('No se pudo copiar. Se descargará la imagen.', 'warning');
+                        downloadImage();
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('Error al generar imagen:', error);
+                showToast('Error al generar la imagen', 'danger');
+            }
+        }
+        
+        // Función para mostrar toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+            toast.classList.add(`bg-${type}`);
+            toastMessage.textContent = message;
+            
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+        
+        // Auto-actualizar al cambiar cualquier campo
+        document.querySelectorAll('#nutritionForm input, #nutritionForm textarea').forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+        
+        // Inicializar vista previa
+        document.addEventListener('DOMContentLoaded', updatePreview);
+    </script>
+</body>
+</html>
